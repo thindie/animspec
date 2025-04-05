@@ -1,9 +1,14 @@
 package com.thindie.animspecs
 
+import android.content.Context
+import android.content.res.Configuration
+import android.os.Build
 import android.os.Bundle
+import android.os.LocaleList
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ContentTransform
@@ -26,6 +31,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,6 +40,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -44,16 +53,34 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
 import com.thindie.animspecs.AnimatedTextDefaults.animSpec
 import com.thindie.animspecs.ui.theme.AnimspecsTheme
+import java.util.Locale
 
 class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContent {
-            var text by remember {
-                mutableStateOf("")
+  val bundle: VM by viewModels()
+
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    enableEdgeToEdge()
+    val localizedContext = getLocalisedContext(bundle.language)
+    setContent {
+      CompositionLocalProvider(
+        LocalContext provides localizedContext,
+        LocalConfiguration provides localizedContext.resources.configuration
+      ) {
+        AnimspecsTheme {
+          Row(
+            modifier = Modifier
+              .fillMaxSize()
+              .systemBarsPadding()
+          ) {
+            Button(onClick = { bundle.language = "en"; recreate() }) {
+              Text(text = LocalContext.current.getString(R.string.button_english))
+            }
+            Button(onClick = { bundle.language = "ru"; recreate() }) {
+              Text(text = LocalContext.current.getString(R.string.button_russian))
             }
             AnimspecsTheme {
                 Column(
@@ -75,6 +102,23 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+
+  fun getLocalisedContext(locale: String): Context {
+    val newLocale = Locale(locale);
+    Locale.setDefault(newLocale);
+    val config: Configuration = resources.configuration;
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+      config.setLocale(newLocale)
+      config.setLayoutDirection(newLocale)
+      createConfigurationContext(config)
+    } else {
+      config.setLocales(LocaleList(*listOf(newLocale).toTypedArray()))
+      createConfigurationContext(config)
+    }
+  }
+}
+
 }
 
 @Composable
