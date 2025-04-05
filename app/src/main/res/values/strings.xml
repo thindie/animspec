@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">animspecs</string>
+    <string name="button_1">1</string>
+    <string name="button_russian">2</string>
+    <string name="button_english">3</string>
+    <string name="append">4</string>
+    <string name="erase">5</string>
 </resources>
